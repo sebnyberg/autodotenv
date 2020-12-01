@@ -21,10 +21,10 @@ var (
 // If .env cannot be loaded, the function returns no error and zero
 // loaded variables. This is because .env is expected to only be present
 // in the local environment.
-func LoadDotenv() (n int, err error) {
+func LoadDotenv() error {
 	f, err := os.OpenFile(".env", os.O_RDONLY, 0644)
 	if err != nil {
-		return 0, nil
+		return nil
 	}
 
 	defer func() {
@@ -34,12 +34,13 @@ func LoadDotenv() (n int, err error) {
 	}()
 
 	scanner := bufio.NewScanner(f)
+	n := 0
 	for scanner.Scan() {
 		row := scanner.Text()
 		parts := strings.SplitN(row, "=", 2)
 		if len(parts) == 1 {
 			if parts[0] != "" {
-				return n, fmt.Errorf("%w: failed to parse row %d, value: %v", ErrInvalidRow, n+1, row)
+				return fmt.Errorf("%w: failed to parse row %d, value: %v", ErrInvalidRow, n+1, row)
 			}
 			continue
 		}
@@ -49,5 +50,5 @@ func LoadDotenv() (n int, err error) {
 		os.Setenv(parts[0], parts[1])
 		n++
 	}
-	return n, nil
+	return nil
 }
