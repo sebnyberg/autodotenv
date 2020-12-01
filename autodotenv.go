@@ -10,17 +10,14 @@ import (
 )
 
 var (
-	ErrLoadFailed = errors.New("load failed")
 	ErrInvalidRow = errors.New("invalid row")
 )
 
 // LoadDotenvIfExists reads environment variables from .env
-// and sets the environment using os.Setenv. Beware that these variables
-// will be passed to child processes.
+// and sets the environment using os.Setenv.
 //
-// If .env cannot be loaded, the function returns no error and zero
-// loaded variables. This is because .env is expected to only be present
-// in the local environment.
+// If .env contains invalid entries, an error is returned.
+// If .env could not be opened, no error is returned.
 func LoadDotenv() error {
 	f, err := os.OpenFile(".env", os.O_RDONLY, 0644)
 	if err != nil {
