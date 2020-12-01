@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
 	"strings"
 )
 
@@ -17,19 +16,20 @@ var (
 
 // LoadDotenvIfExists reads environment variables from .env
 // and sets the environment using os.Setenv. Beware that these variables
-// will be passed onto child processes.
-// The function returns the number of variables read from the file.
-// If no .env file exists, autodotenv.ErrLoadFailed is returned.
-func LoadDotenv(fp string) (n int, err error) {
-	fp = path.Clean(fp)
-	f, err := os.OpenFile(fp, os.O_RDONLY, 0644)
+// will be passed to child processes.
+//
+// If .env cannot be loaded, the function returns no error and zero
+// loaded variables. This is because .env is expected to only be present
+// in the local environment.
+func LoadDotenv() (n int, err error) {
+	f, err := os.OpenFile(".env", os.O_RDONLY, 0644)
 	if err != nil {
-		return 0, fmt.Errorf("%w: dotenv file at '%v', err: %v", ErrLoadFailed, fp, err)
+		return 0, nil
 	}
 
 	defer func() {
 		if err := f.Close(); err != nil {
-			log.Fatalf("failed to close opened .env file: %v", err)
+			log.Fatalf("failed to close .env file: %v", err)
 		}
 	}()
 
