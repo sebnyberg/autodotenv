@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 )
@@ -14,21 +13,17 @@ var (
 )
 
 // LoadDotenvIfExists reads environment variables from .env
-// and sets the environment using os.Setenv.
+// and sets values using os.Setenv.
 //
-// If .env contains invalid entries, an error is returned.
-// If .env could not be opened, no error is returned.
-func LoadDotenv() error {
+// Returns the number of entries loaded and an error marking
+// whether the file exists and is malformatted. Missing files
+// do not cause any error.
+func LoadDotenvIfExists() (int, error) {
 	f, err := os.OpenFile(".env", os.O_RDONLY, 0644)
 	if err != nil {
-		return nil
+		return 0, nil
 	}
-
-	defer func() {
-		if err := f.Close(); err != nil {
-			log.Fatalf("failed to close .env file: %v", err)
-		}
-	}()
+	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
 	n := 0
@@ -37,7 +32,7 @@ func LoadDotenv() error {
 		parts := strings.SplitN(row, "=", 2)
 		if len(parts) == 1 {
 			if parts[0] != "" {
-				return fmt.Errorf("%w: failed to parse row %d, value: %v", ErrInvalidRow, n+1, row)
+				return n, fmt.Errorf("%w: failed to parse row %d, value: %v", ErrInvalidRow, n+1, row)
 			}
 			continue
 		}
@@ -47,5 +42,5 @@ func LoadDotenv() error {
 		os.Setenv(parts[0], parts[1])
 		n++
 	}
-	return nil
+	return n, nil
 }
